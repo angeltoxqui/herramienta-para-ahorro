@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { Menu } from 'lucide-react';
+import { Menu, Wallet } from 'lucide-react';
 
 const MainLayout = () => {
   return (
