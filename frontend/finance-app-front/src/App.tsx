@@ -2,13 +2,11 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import MainLayout from './components/layout/MainLayout';
-
-// Componentes temporales (luego los haremos reales)
-const Dashboard = () => <h1 className="text-2xl font-bold text-gray-800">Resumen Financiero</h1>;
-const Budget = () => <h1 className="text-2xl font-bold text-gray-800">Control de Presupuesto</h1>;
-const Savings = () => <h1 className="text-2xl font-bold text-gray-800">Mis Ahorros</h1>;
-const Debts = () => <h1 className="text-2xl font-bold text-gray-800">Mis Deudas</h1>;
-const Settings = () => <h1 className="text-2xl font-bold text-gray-800">Configuración</h1>;
+import Dashboard from './pages/Dashboard';
+import Budget from './pages/Budget';
+import Savings from './pages/Savings';
+import Debts from './pages/Debts';
+import Settings from './pages/Settings'; // <--- ¡Listo!
 
 function App() {
   return (
