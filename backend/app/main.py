@@ -6,14 +6,16 @@ from sqlmodel import SQLModel
 from app.core.config import settings
 from app.db.session import engine
 
-# Importamos todos los modelos para asegurarnos de que se creen las tablas
+# Importamos modelos
 from app.models.base import User, SavingGoal, Debt, BudgetCategory, Transaction
 
-# --- IMPORTAMOS LAS RUTAS (ROUTERS) ---
+# Importamos rutas
 from app.api.transactions import router as transactions_router
 from app.api.users import router as users_router
 from app.api.auth import router as auth_router
-from app.api.budget import router as budget_router # 👈 El nuevo de presupuesto
+from app.api.budget import router as budget_router
+from app.api.debts import router as debts_router
+from app.api.savings import router as savings_router # 👈 NUEVO
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,20 +30,21 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# --- CONFIGURACIÓN DE CORS (Para conectar con React) ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"], # Permite que tu Frontend hable con el Backend
+    allow_origins=["http://localhost:5173"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- REGISTRAMOS TODAS LAS RUTAS ---
+# Registramos las rutas
 app.include_router(transactions_router, prefix="/transactions", tags=["Transacciones"])
 app.include_router(users_router, prefix="/users", tags=["Usuarios"])
 app.include_router(auth_router, prefix="/auth", tags=["Autenticación"])
-app.include_router(budget_router, prefix="/budget", tags=["Presupuesto"]) # 👈 Activamos la ruta
+app.include_router(budget_router, prefix="/budget", tags=["Presupuesto"])
+app.include_router(debts_router, prefix="/debts", tags=["Deudas"])
+app.include_router(savings_router, prefix="/savings", tags=["Ahorros"]) # 👈 REGISTRADO
 
 @app.get("/")
 def root():
