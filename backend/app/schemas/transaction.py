@@ -1,14 +1,18 @@
 from sqlmodel import SQLModel
 from datetime import datetime
+from typing import Optional # 👈 Importante
 
-# Esto es lo que el usuario nos manda para CREAR
 class TransactionCreate(SQLModel):
     amount: float
-    type: str  # income o expense
+    type: str
     category: str
     description: str
     date: datetime = datetime.now()
-    user_id: int  # Por ahora lo mandamos manual, luego será automático con el login
+    user_id: Optional[int] = None # 👈 CAMBIO: Ahora es opcional
+
+class TransactionRead(TransactionCreate):
+    id: int
+    user_id: int # En la lectura sí queremos verlo siempre
 
 # Esto es lo que le respondemos al usuario (incluye el ID)
 class TransactionRead(TransactionCreate):

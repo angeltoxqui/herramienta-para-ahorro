@@ -16,6 +16,7 @@ from app.api.auth import router as auth_router
 from app.api.budget import router as budget_router
 from app.api.debts import router as debts_router
 from app.api.savings import router as savings_router # 👈 NUEVO
+from app.api.analysis import router as analysis_router # 👈 NUEVO
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -45,6 +46,7 @@ app.include_router(auth_router, prefix="/auth", tags=["Autenticación"])
 app.include_router(budget_router, prefix="/budget", tags=["Presupuesto"])
 app.include_router(debts_router, prefix="/debts", tags=["Deudas"])
 app.include_router(savings_router, prefix="/savings", tags=["Ahorros"]) # 👈 REGISTRADO
+app.include_router(analysis_router, prefix="/analysis", tags=["Inteligencia Artificial 🧠"])
 
 @app.get("/")
 def root():

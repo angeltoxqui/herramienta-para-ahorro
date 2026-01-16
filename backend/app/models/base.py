@@ -52,3 +52,31 @@ class Transaction(SQLModel, table=True):
     category: str
     description: str
     date: datetime = Field(default_factory=datetime.utcnow)
+
+# --- NUEVAS TABLAS PARA EL DIFERENCIADOR 2026 ---
+
+# 6. TABLA DE GASTOS RECURRENTES DETECTADOS (El "Gastos Silenciosos")
+class RecurringExpense(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id")
+    
+    name: str             # Ej: "Netflix"
+    amount: float         # Ej: 15.99
+    frequency: str        # "monthly", "weekly", "yearly"
+    
+    # Datos para la IA/Algoritmo
+    detected_day: int     # Ej: día 15 de cada mes
+    confidence_score: float = 0.0 # Qué tan seguro está el sistema (0.0 a 1.0)
+    
+    is_confirmed: bool = False    # ¿El usuario confirmó que es real?
+    is_ignored: bool = False      # ¿El usuario dijo "ignora esto"?
+    
+    last_charged_date: Optional[date] = None
+
+# 7. TABLA DE GRUPOS FAMILIARES (Para Finanzas Colaborativas)
+class FamilyGroup(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    owner_id: int = Field(foreign_key="user.id")
+    invite_code: str = Field(unique=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
