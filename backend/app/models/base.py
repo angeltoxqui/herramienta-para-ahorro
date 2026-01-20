@@ -33,25 +33,26 @@ class Debt(SQLModel, table=True):
     min_payment: float
     color: str = "bg-blue-500"
 
-# 4. TABLA DE CATEGORÍAS DE PRESUPUESTO (MODIFICADA 🟢)
+# 4. TABLA DE CATEGORÍAS DE PRESUPUESTO
 class BudgetCategory(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
     name: str
     limit_amount: float
     spent_amount: float = 0.0
-    
-    # 🟢 Nuevo campo para el Rollover (Sobrante del mes anterior)
     rollover_amount: float = Field(default=0.0) 
-    
     icon: str = "🏷️"
     eco_score: str = "low"
 
-# 5. TABLA DE TRANSACCIONES
+# 5. TABLA DE TRANSACCIONES (MODIFICADA 🟢)
 class Transaction(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
+    
+    # Relaciones opcionales
     debt_id: Optional[int] = Field(default=None, foreign_key="debt.id")
+    saving_goal_id: Optional[int] = Field(default=None, foreign_key="savinggoal.id") # 🟢 Nuevo campo
+    
     amount: float
     type: str # income, expense
     category: str

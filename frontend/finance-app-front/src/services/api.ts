@@ -35,25 +35,43 @@ api.interceptors.response.use(
 );
 
 // ==========================================
-// 2. FUNCIONES DEL DETECTIVE (Analysis) 🧠
+// 2. DEFINICIÓN DE TIPOS 📝
 // ==========================================
-// 👇 Esto es lo que faltaba y causaba el error
+export interface CreateTransactionDTO {
+  amount: number;
+  type: 'income' | 'expense';
+  category: string;
+  description: string;
+  date?: string;
+  debt_id?: number;
+  saving_goal_id?: number; // 🟢 NUEVO: Campo para vincular meta
+}
+
+// ==========================================
+// 3. FUNCIONES DE API 🛠️
+// ==========================================
+
+// Crear transacción (ahora soporta saving_goal_id)
+export const createTransaction = async (transaction: CreateTransactionDTO) => {
+  const response = await api.post('/transactions/', transaction);
+  return response.data;
+};
+
+// ==========================================
+// 4. FUNCIONES DEL DETECTIVE (Analysis) 🧠
+// ==========================================
 export const analysis = {
-  // Escanear gastos (Llamar al detective)
   scan: async () => {
     const response = await api.post('/analysis/scan-recurring');
     return response.data;
   },
   
-  // Obtener los detectados (Para mostrar la lista)
   getDetected: async () => {
     const response = await api.get('/analysis/');
     return response.data;
   },
   
-  // Responder (Confirmar o Ignorar)
   respond: async (id: number, action: 'confirm' | 'ignore') => {
-    // Nota: action debe enviarse como query param: ?action=confirm
     const response = await api.patch(`/analysis/${id}?action=${action}`);
     return response.data;
   }

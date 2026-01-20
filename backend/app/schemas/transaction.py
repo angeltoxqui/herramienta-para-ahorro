@@ -8,7 +8,8 @@ class TransactionBase(SQLModel):
     category: str
     description: str
     date: Optional[datetime] = None
-    debt_id: Optional[int] = None # 👈 Nuevo campo opcional
+    debt_id: Optional[int] = None
+    saving_goal_id: Optional[int] = None # 🟢 Permitimos enviar el ID de la meta
 
 class TransactionCreate(TransactionBase):
     pass
