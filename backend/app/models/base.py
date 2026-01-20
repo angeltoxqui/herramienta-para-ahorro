@@ -29,36 +29,36 @@ class Debt(SQLModel, table=True):
     name: str
     total_amount: float
     current_balance: float # Lo que falta por pagar
-    interest_rate: float # APR Anual (Ej: 20.0 para 20%)
+    interest_rate: float # APR Anual
     min_payment: float
     color: str = "bg-blue-500"
 
-# 4. TABLA DE CATEGORÍAS DE PRESUPUESTO
+# 4. TABLA DE CATEGORÍAS DE PRESUPUESTO (MODIFICADA 🟢)
 class BudgetCategory(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
     name: str
     limit_amount: float
     spent_amount: float = 0.0
+    
+    # 🟢 Nuevo campo para el Rollover (Sobrante del mes anterior)
+    rollover_amount: float = Field(default=0.0) 
+    
     icon: str = "🏷️"
     eco_score: str = "low"
 
-# 5. TABLA DE TRANSACCIONES (Modificada)
+# 5. TABLA DE TRANSACCIONES
 class Transaction(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
-    
-    # Relación opcional con una Deuda (para abonos)
     debt_id: Optional[int] = Field(default=None, foreign_key="debt.id")
-    
     amount: float
-    type: str # income, expense, debt_payment
+    type: str # income, expense
     category: str
     description: str
     date: datetime = Field(default_factory=datetime.utcnow)
 
-# --- NUEVAS TABLAS PARA EL DIFERENCIADOR ---
-
+# --- TABLAS DEL DIFERENCIADOR ---
 class RecurringExpense(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
