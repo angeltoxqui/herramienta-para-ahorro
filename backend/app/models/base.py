@@ -11,7 +11,7 @@ class User(SQLModel, table=True):
     is_premium: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-# 2. TABLA DE METAS DE AHORRO (Savings)
+# 2. TABLA DE METAS DE AHORRO
 class SavingGoal(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
@@ -19,19 +19,19 @@ class SavingGoal(SQLModel, table=True):
     target_amount: float
     current_amount: float = 0.0
     deadline: Optional[date] = None
-    type: str = "free" # free, template, shared
+    type: str = "free"
     image_url: Optional[str] = None
 
-# 3. TABLA DE DEUDAS (Debts)
+# 3. TABLA DE DEUDAS
 class Debt(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
     name: str
     total_amount: float
     current_balance: float # Lo que falta por pagar
-    interest_rate: float # APR
+    interest_rate: float # APR Anual (Ej: 20.0 para 20%)
     min_payment: float
-    color: str = "bg-blue-500" # Para el frontend
+    color: str = "bg-blue-500"
 
 # 4. TABLA DE CATEGORÍAS DE PRESUPUESTO
 class BudgetCategory(SQLModel, table=True):
@@ -41,39 +41,36 @@ class BudgetCategory(SQLModel, table=True):
     limit_amount: float
     spent_amount: float = 0.0
     icon: str = "🏷️"
-    eco_score: str = "low" # low, med, high
+    eco_score: str = "low"
 
-# 5. TABLA DE TRANSACCIONES (Dashboard)
+# 5. TABLA DE TRANSACCIONES (Modificada)
 class Transaction(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
+    
+    # Relación opcional con una Deuda (para abonos)
+    debt_id: Optional[int] = Field(default=None, foreign_key="debt.id")
+    
     amount: float
-    type: str # income, expense
+    type: str # income, expense, debt_payment
     category: str
     description: str
     date: datetime = Field(default_factory=datetime.utcnow)
 
-# --- NUEVAS TABLAS PARA EL DIFERENCIADOR 2026 ---
+# --- NUEVAS TABLAS PARA EL DIFERENCIADOR ---
 
-# 6. TABLA DE GASTOS RECURRENTES DETECTADOS (El "Gastos Silenciosos")
 class RecurringExpense(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
-    
-    name: str             # Ej: "Netflix"
-    amount: float         # Ej: 15.99
-    frequency: str        # "monthly", "weekly", "yearly"
-    
-    # Datos para la IA/Algoritmo
-    detected_day: int     # Ej: día 15 de cada mes
-    confidence_score: float = 0.0 # Qué tan seguro está el sistema (0.0 a 1.0)
-    
-    is_confirmed: bool = False    # ¿El usuario confirmó que es real?
-    is_ignored: bool = False      # ¿El usuario dijo "ignora esto"?
-    
+    name: str
+    amount: float
+    frequency: str
+    detected_day: int
+    confidence_score: float = 0.0
+    is_confirmed: bool = False
+    is_ignored: bool = False
     last_charged_date: Optional[date] = None
 
-# 7. TABLA DE GRUPOS FAMILIARES (Para Finanzas Colaborativas)
 class FamilyGroup(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str

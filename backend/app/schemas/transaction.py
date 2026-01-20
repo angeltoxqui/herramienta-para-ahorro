@@ -1,19 +1,18 @@
 from sqlmodel import SQLModel
 from datetime import datetime
-from typing import Optional # 👈 Importante
+from typing import Optional
 
-class TransactionCreate(SQLModel):
+class TransactionBase(SQLModel):
     amount: float
     type: str
     category: str
     description: str
-    date: datetime = datetime.now()
-    user_id: Optional[int] = None # 👈 CAMBIO: Ahora es opcional
+    date: Optional[datetime] = None
+    debt_id: Optional[int] = None # 👈 Nuevo campo opcional
 
-class TransactionRead(TransactionCreate):
-    id: int
-    user_id: int # En la lectura sí queremos verlo siempre
+class TransactionCreate(TransactionBase):
+    pass
 
-# Esto es lo que le respondemos al usuario (incluye el ID)
-class TransactionRead(TransactionCreate):
+class TransactionRead(TransactionBase):
     id: int
+    user_id: int

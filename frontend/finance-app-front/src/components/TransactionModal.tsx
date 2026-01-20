@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
 import api from '../services/api';
 
@@ -6,7 +6,7 @@ interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
   type: 'income' | 'expense';
-  onSuccess: () => void; // Para recargar la lista al guardar
+  onSuccess: () => void;
 }
 
 const TransactionModal = ({ isOpen, onClose, type, onSuccess }: TransactionModalProps) => {
@@ -14,6 +14,17 @@ const TransactionModal = ({ isOpen, onClose, type, onSuccess }: TransactionModal
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // Nuevo: Manejo de Deudas
+  const [debts, setDebts] = useState<any[]>([]);
+  const [selectedDebtId, setSelectedDebtId] = useState<string>('');
+
+  // Cargar deudas al abrir el modal (solo si es gasto)
+  useEffect(() => {
+    if (isOpen && type === 'expense') {
+      api.get('/debts/').then(res => setDebts(res.data)).catch(console.error);
+    }
+  }, [isOpen, type]);
 
   if (!isOpen) return null;
 
@@ -22,20 +33,28 @@ const TransactionModal = ({ isOpen, onClose, type, onSuccess }: TransactionModal
     setLoading(true);
 
     try {
-      // Enviamos los datos al Backend
-      await api.post('/transactions/', {
+      const payload: any = {
         amount: parseFloat(amount),
         description: description,
         category: category || 'General',
         type: type,
-        user_id: 1 // Por ahora seguimos con el usuario 1 fijo
-      });
+      };
+
+      // Si seleccionó una deuda, la adjuntamos
+      if (selectedDebtId) {
+        payload.debt_id = parseInt(selectedDebtId);
+        payload.description = `Pago deuda: ${description}`; // Opcional: aclarar descripción
+      }
+
+      await api.post('/transactions/', payload);
       
-      onSuccess(); // Avisamos al Dashboard que recargue
-      onClose();   // Cerramos el modal
+      onSuccess();
+      onClose();
+      // Reset form
       setAmount('');
       setDescription('');
       setCategory('');
+      setSelectedDebtId('');
     } catch (error) {
       console.error("Error guardando:", error);
       alert("Hubo un error al guardar");
@@ -83,9 +102,30 @@ const TransactionModal = ({ isOpen, onClose, type, onSuccess }: TransactionModal
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 outline-none"
-              placeholder="Ej. Tacos al pastor"
+              placeholder={selectedDebtId ? "Ej. Abono mensual" : "Ej. Tacos al pastor"}
             />
           </div>
+
+          {/* Selector de Deuda (SOLO GASTOS) */}
+          {type === 'expense' && debts.length > 0 && (
+             <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+               <label className="block text-xs font-bold text-indigo-800 mb-1">¿Es un abono a deuda? (Opcional)</label>
+               <select 
+                 value={selectedDebtId}
+                 onChange={(e) => {
+                   setSelectedDebtId(e.target.value);
+                   // Si elige deuda, podemos auto-setear la categoría
+                   if(e.target.value) setCategory('Deudas');
+                 }}
+                 className="w-full p-2 border border-indigo-200 rounded-lg bg-white text-sm outline-none"
+               >
+                 <option value="">No, es un gasto normal</option>
+                 {debts.map(d => (
+                   <option key={d.id} value={d.id}>{d.name} (Saldo: ${d.current_balance})</option>
+                 ))}
+               </select>
+             </div>
+          )}
 
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1">Categoría</label>
@@ -98,6 +138,7 @@ const TransactionModal = ({ isOpen, onClose, type, onSuccess }: TransactionModal
               <option value="Comida">🍔 Comida</option>
               <option value="Transporte">🚌 Transporte</option>
               <option value="Vivienda">🏠 Vivienda</option>
+              <option value="Deudas">💳 Deudas / Pagos</option>
               <option value="Ocio">🎉 Ocio</option>
               <option value="Salario">💰 Salario</option>
               <option value="Otros">📦 Otros</option>

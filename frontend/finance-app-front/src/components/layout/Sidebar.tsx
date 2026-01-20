@@ -12,7 +12,8 @@ import {
 import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = () => {
-  const { isPremium, upgradeToPremium } = useAuth();
+  // 1. Asegúrate de añadir 'logout' aquí
+  const { isPremium, upgradeToPremium, logout } = useAuth();
 
   const menuItems = [
     { icon: <LayoutDashboard size={20} />, label: 'Resumen', path: '/' },
@@ -71,9 +72,12 @@ const Sidebar = () => {
         </div>
       )}
 
-      {/* Footer Sidebar */}
+      {/* Footer Sidebar - AQUÍ ESTABA EL ERROR */}
       <div className="p-4 border-t border-gray-200">
-        <button className="flex items-center gap-3 text-gray-500 hover:text-red-500 transition-colors w-full px-4">
+        <button 
+          onClick={logout}
+          className="flex items-center gap-3 text-gray-500 hover:text-red-500 transition-colors w-full px-4"
+        >
           <LogOut size={20} />
           <span>Cerrar Sesión</span>
         </button>

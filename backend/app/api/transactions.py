@@ -3,9 +3,9 @@ from sqlmodel import Session, select
 from typing import List
 
 from app.db.session import get_session
-from app.models.base import Transaction, User
+# Importamos Debt también
+from app.models.base import Transaction, User, BudgetCategory, Debt
 from app.schemas.transaction import TransactionCreate, TransactionRead
-# Importamos la dependencia de seguridad
 from app.core.security import get_current_user
 
 router = APIRouter()
@@ -16,19 +16,36 @@ def create_transaction(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    # 1. Convertimos el input a un diccionario limpio
     transaction_data = transaction.model_dump()
-    
-    # 2. Eliminamos 'user_id' del diccionario si viene como None
     transaction_data.pop("user_id", None)
     
-    # 3. Creamos el modelo usando el diccionario
     db_transaction = Transaction(**transaction_data)
-    
-    # 4. Asignamos el ID del usuario autenticado MANUALMENTE
     db_transaction.user_id = current_user.id 
-    
     session.add(db_transaction)
+    
+    # 1. LÓGICA DE PRESUPUESTO (Gasto normal)
+    if db_transaction.type == "expense" and db_transaction.category:
+        category = session.exec(
+            select(BudgetCategory)
+            .where(BudgetCategory.user_id == current_user.id)
+            .where(BudgetCategory.name == db_transaction.category)
+        ).first()
+        if category:
+            category.spent_amount += db_transaction.amount
+            session.add(category)
+
+    # 2. 🟢 LÓGICA DE DEUDAS (Abono a Capital)
+    # Si tiene debt_id, buscamos la deuda y restamos el monto del balance
+    if db_transaction.debt_id:
+        debt = session.get(Debt, db_transaction.debt_id)
+        if debt and debt.user_id == current_user.id:
+            # Restamos el pago al saldo de la deuda
+            # (Validamos que no quede negativo si quieres, por ahora simple)
+            debt.current_balance -= db_transaction.amount
+            if debt.current_balance < 0:
+                debt.current_balance = 0
+            session.add(debt)
+    
     session.commit()
     session.refresh(db_transaction)
     return db_transaction
@@ -36,9 +53,8 @@ def create_transaction(
 @router.get("/", response_model=List[TransactionRead])
 def read_transactions(
     session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user) # 🔒 Usuario autenticado
+    current_user: User = Depends(get_current_user)
 ):
-    # ⚡ FILTRAMOS solo las transacciones de este usuario
     transactions = session.exec(
         select(Transaction).where(Transaction.user_id == current_user.id)
     ).all()

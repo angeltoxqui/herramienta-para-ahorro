@@ -2,16 +2,9 @@ from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
 from typing import List
 
-# Importamos la conexión a la DB
 from app.db.session import get_session
-
-# Importamos la tabla de la base de datos (Modelo) y el modelo de Usuario
 from app.models.base import BudgetCategory, User
-
-# Importamos los esquemas de datos
 from app.schemas.budget import CategoryCreate, CategoryRead
-
-# Importamos la seguridad para obtener el usuario actual
 from app.core.security import get_current_user
 
 router = APIRouter()
@@ -29,8 +22,6 @@ def create_category(
     db_category = BudgetCategory(**category_data)
     db_category.user_id = current_user.id
     
-    
-    # Guardamos en la base de datos
     session.add(db_category)
     session.commit()
     session.refresh(db_category)
@@ -48,3 +39,47 @@ def read_categories(
         select(BudgetCategory).where(BudgetCategory.user_id == current_user.id)
     ).all()
     return categories
+
+# 3. 🟢 Endpoint de ESTADO DEL PRESUPUESTO (Alertas)
+@router.get("/status")
+def check_budget_status(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Retorna el estado de salud de cada categoría y alertas si superan umbrales.
+    Calcula dinámicamente el porcentaje gastado.
+    """
+    # Obtenemos las categorías del usuario
+    categories = session.exec(
+        select(BudgetCategory).where(BudgetCategory.user_id == current_user.id)
+    ).all()
+    
+    status_report = []
+    
+    for cat in categories:
+        # Solo analizamos si hay un límite definido mayor a 0
+        if cat.limit_amount > 0:
+            percentage = (cat.spent_amount / cat.limit_amount) * 100
+            
+            # Determinamos el nivel de alerta
+            alert_level = "normal"
+            message = "Todo bajo control"
+            
+            if percentage >= 100:
+                alert_level = "critical"
+                message = f"¡Has excedido tu presupuesto en {cat.name}!"
+            elif percentage >= 85:
+                alert_level = "warning"
+                message = f"Cuidado: Estás al {int(percentage)}% en {cat.name}"
+                
+            status_report.append({
+                "category": cat.name,
+                "spent": cat.spent_amount,
+                "limit": cat.limit_amount,
+                "percentage": round(percentage, 1),
+                "alert": alert_level, # normal, warning, critical
+                "message": message
+            })
+            
+    return status_report
